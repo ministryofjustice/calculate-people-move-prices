@@ -13,6 +13,11 @@ import uk.gov.justice.digital.hmpps.pecs.jpc.integration.pages.Pages.Login
 import uk.gov.justice.digital.hmpps.pecs.jpc.integration.pages.Pages.MoveDetails
 import uk.gov.justice.digital.hmpps.pecs.jpc.integration.pages.Pages.MovesByType
 import uk.gov.justice.digital.hmpps.pecs.jpc.integration.pages.Pages.SelectMonthYear
+import uk.gov.justice.digital.hmpps.pecs.jpc.integration.pages.PresentDayMoveData.cancelledMoveCM1
+import uk.gov.justice.digital.hmpps.pecs.jpc.integration.pages.PresentDayMoveData.lockoutMoveLM1
+import uk.gov.justice.digital.hmpps.pecs.jpc.integration.pages.PresentDayMoveData.longHaulMoveLHM1
+import uk.gov.justice.digital.hmpps.pecs.jpc.integration.pages.PresentDayMoveData.multiMoveMM1
+import uk.gov.justice.digital.hmpps.pecs.jpc.integration.pages.PresentDayMoveData.redirectMoveRM1
 import uk.gov.justice.digital.hmpps.pecs.jpc.integration.pages.PresentDayMoveData.standardMoveSM1
 import uk.gov.justice.digital.hmpps.pecs.jpc.move.Move
 import uk.gov.justice.digital.hmpps.pecs.jpc.price.Supplier
@@ -35,8 +40,12 @@ internal class ViewAllMoveTypesTest : IntegrationTest() {
       .navigateToSelectMonthPage()
 
     listOf(
-      // TODO WIP - at the moment this is only checking a standard move.
       standardMoveSM1(),
+      redirectMoveRM1(),
+      longHaulMoveLHM1(),
+      lockoutMoveLM1(),
+      multiMoveMM1(),
+      cancelledMoveCM1()
     ).forEach { move -> verifyDetailsOf(move, LocalDate.now().month, Year.now()) }
   }
 

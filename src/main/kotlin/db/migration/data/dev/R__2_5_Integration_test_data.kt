@@ -2,6 +2,7 @@ package db.migration.data.dev
 
 import org.flywaydb.core.api.migration.BaseJavaMigration
 import org.flywaydb.core.api.migration.Context
+import org.slf4j.LoggerFactory
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.datasource.SingleConnectionDataSource
 import uk.gov.justice.digital.hmpps.pecs.jpc.importer.report.Event
@@ -13,6 +14,7 @@ import uk.gov.justice.digital.hmpps.pecs.jpc.move.MoveType
 import uk.gov.justice.digital.hmpps.pecs.jpc.price.Supplier
 import uk.gov.justice.digital.hmpps.pecs.jpc.price.effectiveYearForDate
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.UUID
 
 /**
@@ -25,25 +27,112 @@ import java.util.UUID
 @Suppress("ClassName", "unused")
 class R__2_5_Integration_test_data : BaseJavaMigration() {
 
+  private val logger = LoggerFactory.getLogger(javaClass)
+
   override fun migrate(context: Context) {
     JdbcTemplate(SingleConnectionDataSource(context.connection, true)).also {
       createStandardMoves(it)
+      createRedirectMoves(it)
+      createLongHaulMoves(it)
+      createLockoutMoves(it)
+      createMultiTypeMoves(it)
+      createCancelledMoves(it)
     }
   }
 
   private fun createStandardMoves(template: JdbcTemplate) {
+    logger.info("create standard moves")
+
     mapOf(
       "SM1" to "PR1",
       "SM2" to "PR2",
       "SM3" to "PR3"
     ).forEach {
-      create(move(moveId = it.key, profileId = it.value, fromAgencyId = "SFROM", toAgencyId = "STO"), template).also { move ->
+      create(move(moveId = it.key, profileId = it.value, fromAgencyId = "FROM_AGENCY", toAgencyId = "TO_AGENCY"), template).also { move ->
         create(moveStartEvent(move), template)
         create(moveCompleteEvent(move), template)
-        create(journey(move, fromAgencyId = "SFROM", toAgencyId = "STO"), template).also { journey ->
+        create(journey(move, fromAgencyId = "FROM_AGENCY", toAgencyId = "TO_AGENCY"), template).also { journey ->
           create(journeyStartEvent(journey), template)
           create(journeyCompleteEvent(journey), template)
         }
+      }
+    }
+  }
+
+  // TODO need to add the appropriate journey events for the following move types...
+
+  private fun createRedirectMoves(template: JdbcTemplate) {
+    logger.info("create redirect moves")
+
+    mapOf(
+      "RM1" to "PR4",
+    ).forEach {
+      create(move(moveId = it.key, profileId = it.value, fromAgencyId = "FROM_AGENCY", toAgencyId = "TO_AGENCY", type = MoveType.REDIRECTION), template).also { move ->
+        create(moveStartEvent(move), template)
+        create(moveRedirectEvent(move), template)
+        create(moveCompleteEvent(move), template)
+        create(journey(move, fromAgencyId = "FROM_AGENCY", toAgencyId = "STOPOVER_AGENCY", state = JourneyState.cancelled, dropOff = null), template)
+        create(journey(move, fromAgencyId = "STOPOVER_AGENCY", toAgencyId = "TO_AGENCY"), template)
+      }
+    }
+  }
+
+  private fun createLongHaulMoves(template: JdbcTemplate) {
+    logger.info("create long haul moves")
+
+    mapOf(
+      "LHM1" to "PR5",
+    ).forEach {
+      create(move(moveId = it.key, profileId = it.value, fromAgencyId = "FROM_AGENCY", toAgencyId = "TO_AGENCY", type = MoveType.LONG_HAUL, days = 1), template).also { move ->
+        create(moveStartEvent(move), template)
+        create(moveCompleteEvent(move), template)
+        create(journey(move, fromAgencyId = "FROM_AGENCY", toAgencyId = "STOPOVER_AGENCY"), template)
+        create(journey(move, fromAgencyId = "STOPOVER_AGENCY", toAgencyId = "TO_AGENCY", pickUp = move.pickUpDateTime?.plusDays(1), dropOff = move.dropOffOrCancelledDateTime), template)
+      }
+    }
+  }
+
+  private fun createLockoutMoves(template: JdbcTemplate) {
+    logger.info("create lockout moves")
+
+    mapOf(
+      "LM1" to "PR6",
+    ).forEach {
+      create(move(moveId = it.key, profileId = it.value, fromAgencyId = "FROM_AGENCY", toAgencyId = "TO_AGENCY", type = MoveType.LOCKOUT, days = 1), template).also { move ->
+        create(moveStartEvent(move), template)
+        create(moveCompleteEvent(move), template)
+        create(journey(move, fromAgencyId = "FROM_AGENCY", toAgencyId = "LOCKOUT_AGENCY"), template)
+        create(journey(move, fromAgencyId = "LOCKOUT_AGENCY", toAgencyId = "TO_AGENCY", pickUp = move.pickUpDateTime?.plusDays(1), dropOff = move.dropOffOrCancelledDateTime), template)
+      }
+    }
+  }
+
+  private fun createMultiTypeMoves(template: JdbcTemplate) {
+    logger.info("create multi type moves")
+
+    mapOf(
+      "MM1" to "PR7",
+    ).forEach {
+      create(move(moveId = it.key, profileId = it.value, fromAgencyId = "FROM_AGENCY", toAgencyId = "TO_AGENCY4", type = MoveType.MULTI, days = 1), template).also { move ->
+        create(moveStartEvent(move), template)
+        create(moveCompleteEvent(move), template)
+        create(journey(move, fromAgencyId = "FROM_AGENCY", toAgencyId = "TO_AGENCY2"), template)
+        create(journey(move, fromAgencyId = "FROM_AGENCY2", toAgencyId = "TO_AGENCY3", state = JourneyState.cancelled, dropOff = null), template)
+        create(journey(move, fromAgencyId = "FROM_AGENCY2", toAgencyId = "TO_AGENCY4", pickUp = move.pickUpDateTime?.plusDays(1), dropOff = move.dropOffOrCancelledDateTime), template)
+      }
+    }
+  }
+
+  private fun createCancelledMoves(template: JdbcTemplate) {
+    logger.info("create cancelled moves")
+
+    mapOf(
+      "CM1" to "PR8",
+    ).forEach {
+      create(move(moveId = it.key, profileId = it.value, fromAgencyId = "FROM_AGENCY", toAgencyId = "TO_AGENCY", type = MoveType.CANCELLED), template).also { move ->
+        create(moveAcceptEvent(move), template)
+        create(moveCancelEvent(move), template)
+        create(journey(move, fromAgencyId = "FROM_AGENCY", toAgencyId = "TO_AGENCY", state = JourneyState.cancelled), template)
       }
     }
   }
@@ -117,9 +206,10 @@ private fun move(
   profileId: String,
   fromAgencyId: String,
   toAgencyId: String,
-  supplier: Supplier = Supplier.SERCO
+  supplier: Supplier = Supplier.SERCO,
+  days: Long = 0
 ) = Move(
-  dropOffOrCancelledDateTime = today.atStartOfDay().plusHours(12),
+  dropOffOrCancelledDateTime = today.plusDays(days).atStartOfDay().plusHours(12),
   fromNomisAgencyId = fromAgencyId,
   moveDate = today,
   moveId = moveId,
@@ -157,28 +247,26 @@ private val moveSql = """
   ) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 """.trimIndent()
 
-private fun moveStartEvent(move: Move, supplier: Supplier = Supplier.SERCO) = Event(
+private fun moveStartEvent(move: Move, supplier: Supplier = Supplier.SERCO) = moveEvent(move, supplier, "Start")
+
+private fun moveRedirectEvent(move: Move, supplier: Supplier = Supplier.SERCO) = moveEvent(move, supplier, "Redirect")
+
+private fun moveCompleteEvent(move: Move, supplier: Supplier = Supplier.SERCO) = moveEvent(move, supplier, "Complete")
+
+private fun moveAcceptEvent(move: Move, supplier: Supplier = Supplier.SERCO) = moveEvent(move, supplier, "Accept")
+
+private fun moveCancelEvent(move: Move, supplier: Supplier = Supplier.SERCO) = moveEvent(move, supplier, "Cancel")
+
+private fun moveEvent(move: Move, supplier: Supplier = Supplier.SERCO, type: String) = Event(
   details = emptyMap(),
   eventId = "ME" + UUID.randomUUID().toString(),
   eventableId = move.moveId,
   eventableType = "move",
-  notes = "Note for move start event",
+  notes = "Note for move $type event",
   occurredAt = move.pickUpDateTime!!,
   recordedAt = today.atStartOfDay(),
   supplier = supplier,
-  type = "MoveStart",
-  updatedAt = today.atStartOfDay(),
-)
-private fun moveCompleteEvent(move: Move, supplier: Supplier = Supplier.SERCO) = Event(
-  details = emptyMap(),
-  eventId = "ME" + UUID.randomUUID().toString(),
-  eventableId = move.moveId,
-  eventableType = "move",
-  notes = "Note for move complete event",
-  occurredAt = move.dropOffOrCancelledDateTime!!,
-  recordedAt = today.atStartOfDay(),
-  supplier = supplier,
-  type = "MoveComplete",
+  type = "Move$type",
   updatedAt = today.atStartOfDay(),
 )
 
@@ -186,18 +274,21 @@ private fun journey(
   move: Move,
   fromAgencyId: String,
   toAgencyId: String,
-  supplier: Supplier = Supplier.SERCO
+  supplier: Supplier = Supplier.SERCO,
+  state: JourneyState = JourneyState.completed,
+  pickUp: LocalDateTime? = move.pickUpDateTime,
+  dropOff: LocalDateTime? = move.dropOffOrCancelledDateTime
 ) = Journey(
   billable = true,
   clientTimeStamp = today.atStartOfDay(),
-  dropOffDateTime = move.dropOffOrCancelledDateTime,
+  dropOffDateTime = dropOff,
   effectiveYear = effectiveYearForDate(today),
   fromNomisAgencyId = fromAgencyId,
   journeyId = UUID.randomUUID().toString(),
   moveId = move.moveId,
   notes = move.notes,
-  pickUpDateTime = move.pickUpDateTime,
-  state = JourneyState.completed,
+  pickUpDateTime = pickUp,
+  state = state,
   supplier = supplier,
   toNomisAgencyId = toAgencyId,
   updatedAt = today.atStartOfDay(),

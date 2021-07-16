@@ -34,6 +34,61 @@ private val bonnieElizabeth =
     gender = "female"
   )
 
+private val ronnieBiggs =
+  Person(
+    personId = "_",
+    updatedAt = LocalDateTime.now(),
+    prisonNumber = "PRISONER4",
+    firstNames = "Ronnie",
+    lastName = "Biggs",
+    dateOfBirth = LocalDate.of(1929, 8, 8),
+    gender = "male"
+  )
+
+private val fredBloggs =
+  Person(
+    personId = "_",
+    updatedAt = LocalDateTime.now(),
+    prisonNumber = "PRISONER5",
+    firstNames = "Fred",
+    lastName = "Bloggs",
+    dateOfBirth = LocalDate.of(1950, 4, 12),
+    gender = "male"
+  )
+
+private val janeBloggs =
+  Person(
+    personId = "_",
+    updatedAt = LocalDateTime.now(),
+    prisonNumber = "PRISONER6",
+    firstNames = "Jane",
+    lastName = "Bloggs",
+    dateOfBirth = LocalDate.of(1961, 10, 22),
+    gender = "female"
+  )
+
+private val donaldDuck =
+  Person(
+    personId = "_",
+    updatedAt = LocalDateTime.now(),
+    prisonNumber = "PRISONER7",
+    firstNames = "Donald",
+    lastName = "Duck",
+    dateOfBirth = LocalDate.of(1940, 9, 27),
+    gender = "male"
+  )
+
+private val professorMoriarty =
+  Person(
+    personId = "_",
+    updatedAt = LocalDateTime.now(),
+    prisonNumber = "PRISONER8",
+    firstNames = "Professor",
+    lastName = "Moriarty",
+    dateOfBirth = LocalDate.of(1880, 7, 10),
+    gender = "male"
+  )
+
 object Dec2020MoveData {
 
   fun standardMoveM4() =
@@ -163,6 +218,10 @@ object PresentDayMoveData {
 
   private val today = LocalDate.now()
 
+  private val startHoursOffset = 10L
+
+  private val endHoursOffset = 12L
+
   fun standardMoveSM1() =
     Move(
       moveId = "SM1",
@@ -171,14 +230,109 @@ object PresentDayMoveData {
       moveType = MoveType.STANDARD,
       status = MoveStatus.completed,
       reference = "STANDARDSM1",
-      fromNomisAgencyId = "SFROM", // Test data is not mapped so will default to the agency ID
-      fromSiteName = "SFROM",
-      toNomisAgencyId = "STO",
-      toSiteName = "STO", // Test data is not mapped so will default to the agency ID
+      fromNomisAgencyId = "FROM_AGENCY",
+      fromSiteName = "FROM_AGENCY", // Test data is not mapped so will default to the agency ID
+      toNomisAgencyId = "TO_AGENCY",
+      toSiteName = "TO_AGENCY", // Test data is not mapped so will default to the agency ID
       reportFromLocationType = "prison",
       reportToLocationType = "prison",
-      pickUpDateTime = today.atStartOfDay().plusHours(10),
-      dropOffOrCancelledDateTime = today.atStartOfDay().plusHours(12),
+      pickUpDateTime = today.atStartOfDay().plusHours(startHoursOffset),
+      dropOffOrCancelledDateTime = today.atStartOfDay().plusHours(endHoursOffset),
       person = billyTheKid
+    )
+
+  fun redirectMoveRM1() =
+    Move(
+      moveId = "RM1",
+      updatedAt = today.atStartOfDay(),
+      supplier = Supplier.SERCO,
+      moveType = MoveType.REDIRECTION,
+      status = MoveStatus.completed,
+      reference = "REDIRECTIONRM1",
+      fromNomisAgencyId = "FROM_AGENCY",
+      fromSiteName = "FROM_AGENCY", // Test data is not mapped so will default to the agency ID
+      toNomisAgencyId = "TO_AGENCY",
+      toSiteName = "TO_AGENCY", // Test data is not mapped so will default to the agency ID
+      reportFromLocationType = "prison",
+      reportToLocationType = "prison",
+      pickUpDateTime = today.atStartOfDay().plusHours(startHoursOffset),
+      dropOffOrCancelledDateTime = today.atStartOfDay().plusHours(endHoursOffset),
+      person = ronnieBiggs
+    )
+
+  fun longHaulMoveLHM1() =
+    Move(
+      moveId = "LHM1",
+      updatedAt = today.atStartOfDay(),
+      supplier = Supplier.SERCO,
+      moveType = MoveType.LONG_HAUL,
+      status = MoveStatus.completed,
+      reference = "LONG_HAULLHM1",
+      fromNomisAgencyId = "FROM_AGENCY",
+      fromSiteName = "FROM_AGENCY", // Test data is not mapped so will default to the agency ID
+      toNomisAgencyId = "TO_AGENCY",
+      toSiteName = "TO_AGENCY", // Test data is not mapped so will default to the agency ID
+      reportFromLocationType = "prison",
+      reportToLocationType = "prison",
+      pickUpDateTime = today.atStartOfDay().plusHours(startHoursOffset),
+      dropOffOrCancelledDateTime = today.atStartOfDay().plusHours(endHoursOffset).plusDays(1),
+      person = fredBloggs
+    )
+
+  fun lockoutMoveLM1() =
+    Move(
+      moveId = "LM1",
+      updatedAt = today.atStartOfDay(),
+      supplier = Supplier.SERCO,
+      moveType = MoveType.LOCKOUT,
+      status = MoveStatus.completed,
+      reference = "LOCKOUTLM1",
+      fromNomisAgencyId = "FROM_AGENCY",
+      fromSiteName = "FROM_AGENCY", // Test data is not mapped so will default to the agency ID
+      toNomisAgencyId = "TO_AGENCY",
+      toSiteName = "TO_AGENCY", // Test data is not mapped so will default to the agency ID
+      reportFromLocationType = "prison",
+      reportToLocationType = "prison",
+      pickUpDateTime = today.atStartOfDay().plusHours(startHoursOffset),
+      dropOffOrCancelledDateTime = today.atStartOfDay().plusHours(endHoursOffset).plusDays(1),
+      person = janeBloggs
+    )
+
+  fun multiMoveMM1() =
+    Move(
+      moveId = "MM1",
+      updatedAt = today.atStartOfDay(),
+      supplier = Supplier.SERCO,
+      moveType = MoveType.MULTI,
+      status = MoveStatus.completed,
+      reference = "MULTIMM1",
+      fromNomisAgencyId = "FROM_AGENCY",
+      fromSiteName = "FROM_AGENCY", // Test data is not mapped so will default to the agency ID
+      toNomisAgencyId = "TO_AGENCY",
+      toSiteName = "TO_AGENCY", // Test data is not mapped so will default to the agency ID
+      reportFromLocationType = "prison",
+      reportToLocationType = "prison",
+      pickUpDateTime = today.atStartOfDay().plusHours(startHoursOffset),
+      dropOffOrCancelledDateTime = today.atStartOfDay().plusHours(endHoursOffset).plusDays(1),
+      person = donaldDuck
+    )
+
+  fun cancelledMoveCM1() =
+    Move(
+      moveId = "CM1",
+      updatedAt = today.atStartOfDay(),
+      supplier = Supplier.SERCO,
+      moveType = MoveType.CANCELLED,
+      status = MoveStatus.completed,
+      reference = "CANCELLEDCM1",
+      fromNomisAgencyId = "FROM_AGENCY",
+      fromSiteName = "FROM_AGENCY", // Test data is not mapped so will default to the agency ID
+      toNomisAgencyId = "TO_AGENCY",
+      toSiteName = "TO_AGENCY", // Test data is not mapped so will default to the agency ID
+      reportFromLocationType = "prison",
+      reportToLocationType = "prison",
+      pickUpDateTime = today.atStartOfDay().plusHours(startHoursOffset),
+      dropOffOrCancelledDateTime = today.atStartOfDay().plusHours(endHoursOffset),
+      person = professorMoriarty
     )
 }
